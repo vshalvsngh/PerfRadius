@@ -1,14 +1,14 @@
 # Perf-Platform
 
-> A self-hosted, full-stack performance testing platform built on Apache JMeter — manage, execute, and monitor load tests from a unified web UI without touching the command line.
+> A self-hosted, full-stack performance testing platform — manage, execute, and monitor load tests from a unified web UI without touching the command line.
 
 ---
 
 ## Overview
 
-Perf-Platform replaces the manual JMeter CLI workflow with a modern web application. Upload your JMX files, configure thread groups and variables through the UI, run tests locally or across distributed Docker slaves, and watch results stream in real time — all from a single dashboard.
+Perf-Platform replaces the manual JMeter CLI workflow with a modern web application. Upload your JMX files, configure thread groups and variables through the UI, run tests locally or distribute load across multiple slave machines, and watch results stream in real time — all from a single dashboard.
 
-Built as a personal project to solve real pain points encountered in enterprise performance testing at Telus Digital.
+Built as a personal project to solve real pain points encountered in enterprise performance testing.
 
 ---
 
@@ -55,8 +55,8 @@ Built as a personal project to solve real pain points encountered in enterprise 
 - Run sharing between team members
 
 ### Load Generator Monitoring
-- Real-time CPU, RAM, and JVM heap stats for Docker slave containers
-- Per-slave status (online/offline) with container name mapping
+- Real-time CPU, RAM, and JVM heap stats per slave
+- Per-slave status (online/offline) with container name mapping (Docker slaves)
 
 ### Multi-Tenancy
 - Organisation-based access control
@@ -73,7 +73,7 @@ Built as a personal project to solve real pain points encountered in enterprise 
 | Backend | FastAPI (Python 3.13), SQLAlchemy, APScheduler |
 | Database | PostgreSQL |
 | Test Engine | Apache JMeter 5.6.x |
-| Load Generators | Docker (custom JMeter server image) |
+| Load Generators | Docker containers, remote Linux machines, remote Windows machines |
 | Auth | JWT (access + refresh tokens) |
 
 ---
@@ -115,7 +115,7 @@ Built as a personal project to solve real pain points encountered in enterprise 
 - Node.js 18+
 - PostgreSQL
 - Apache JMeter 5.6.x (extracted, not installed)
-- Docker (for distributed execution)
+- Docker *(optional — only needed for Docker-based slaves)*
 
 ### Backend Setup
 
@@ -159,20 +159,28 @@ npm run dev
 
 The UI will be available at `http://localhost:5173`.
 
-### Docker Slave Setup (Distributed Execution)
+### Slave Setup (Distributed Execution)
+
+Perf-Platform supports three types of load generator slaves. All are registered the same way under **Settings → Load Generators**.
+
+---
+
+**Option A — Docker (local development / same machine)**
+
+Useful for testing the distributed setup locally without needing separate machines.
 
 ```bash
 # Build the JMeter slave image
 docker build -t jmeter-slave ./docker
 
-# Run slave 1 (port 1099)
+# Run slave 1 (host port 1099)
 docker run -d \
   --name jmeter-slave1 \
   -p 1099:1099 \
   -v C:/perf-data/slave1:/test-data \
   jmeter-slave
 
-# Run slave 2 (port 1100)
+# Run slave 2 (host port 1100)
 docker run -d \
   --name jmeter-slave2 \
   -p 1100:1099 \
@@ -180,7 +188,7 @@ docker run -d \
   jmeter-slave
 ```
 
-Then register the slaves in **Settings → Load Generators**:
+Register in Settings:
 
 | Field | Slave 1 | Slave 2 |
 |---|---|---|
@@ -190,7 +198,51 @@ Then register the slaves in **Settings → Load Generators**:
 | Connection Port | `1099` | `1100` |
 | Slave Type | Docker | Docker |
 
-> **Important:** Each Docker slave must have a unique Connection Port matching its host port mapping. Using the same port for two slaves causes both JMeter masters to connect to the same container.
+> Each Docker slave must have a unique Connection Port matching its host port mapping.
+
+---
+
+**Option B — Remote Linux machine**
+
+Install JMeter on the Linux machine and start the slave daemon:
+
+```bash
+# On the remote Linux machine
+$JMETER_HOME/bin/jmeter-server -Dserver.rmi.ssl.disable=true
+```
+
+Register in Settings — leave Connection Host and Connection Port empty (same as JMeter Host/Port):
+
+| Field | Value |
+|---|---|
+| JMeter Host | `192.168.1.50` (machine's LAN IP) |
+| JMeter Port | `1099` |
+| Connection Host | *(leave empty)* |
+| Connection Port | *(leave empty)* |
+| Slave Type | Linux |
+| Test Data Path | `/test-data` |
+
+---
+
+**Option C — Remote Windows machine**
+
+Install JMeter on the Windows machine and start the slave daemon:
+
+```cmd
+# On the remote Windows machine
+%JMETER_HOME%\bin\jmeter-server.bat -Dserver.rmi.ssl.disable=true
+```
+
+Register in Settings:
+
+| Field | Value |
+|---|---|
+| JMeter Host | `192.168.1.51` (machine's LAN IP) |
+| JMeter Port | `1099` |
+| Connection Host | *(leave empty)* |
+| Connection Port | *(leave empty)* |
+| Slave Type | Windows |
+| Test Data Path | `C:/perf-data` |
 
 ---
 
@@ -273,4 +325,3 @@ perf-platform/
 **Vishal Singh**
 Performance Test Engineer
 [vshalvsngh@gmail.com](mailto:vshalvsngh@gmail.com)
-
