@@ -1,12 +1,12 @@
 # Perf-Platform
 
-> A self-hosted, full-stack performance testing platform — manage, execute, and monitor load tests from a unified web UI without touching the command line.
+> A self-hosted, full-stack performance testing platform to manage, execute, and monitor load tests from a unified web UI without touching the command line.
 
 ---
 
 ## Overview
 
-Perf-Platform replaces the manual JMeter CLI workflow with a modern web application. Upload your JMX files, configure thread groups and variables through the UI, run tests locally or distribute load across multiple slave machines, and watch results stream in real time — all from a single dashboard.
+Perf-Platform replaces the manual JMeter CLI workflow with a modern web application. Upload your JMX files, configure thread groups and variables through the UI, run tests locally or distribute load across multiple slave machines, and watch results stream in real time, all from a single dashboard.
 
 Built as a personal project to solve real pain points encountered in enterprise performance testing.
 
